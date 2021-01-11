@@ -13,11 +13,12 @@
         {{ form.username }}
         <label for="id_password" class="sr-only">Password</label>
         {{ form.password }}
-        <div class="checkbox mb-3">
-          <label for="id_remember_me">
-              {{ form.remember_me }} Remember me
-          </label>
-      </div>
+
+          <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="exampleCheck1">
+            <label class="form-check-label" for="exampleCheck1">{{ form.remember_me }} Remember me</label>
+          </div>
+
         {% if form.errors %}
         <p  class="alert alert-danger" role="alert">
             Your username and password didn't match.

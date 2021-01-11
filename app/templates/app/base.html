@@ -29,8 +29,9 @@
     <nav class="navbar navbar-light" style="background-color: #e3f2fd;">
       <div class="container">
         <ul class="navbar-nav">
+          {% if user.is_authenticated %}
           <li><a class="navbar-brand" href="{% url 'index' %}">Index</a></li>
-
+          {% endif %}
 
         </ul>
 

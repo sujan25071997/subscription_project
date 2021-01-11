@@ -74,6 +74,7 @@ def thanks(request):
 
 @csrf_exempt
 def checkout(request):
+    # Create Strip Checkout
     session = stripe.checkout.Session.create(
         payment_method_types=['card'],
         line_items=[{
@@ -89,6 +90,26 @@ def checkout(request):
         'session_id' : session.id,
         'stripe_public_key' : settings.STRIPE_PUBLIC_KEY
     })
+
+
+@csrf_exempt
+def checkoutm(request):
+    session = stripe.checkout.Session.create(
+        payment_method_types=['card'],
+        line_items=[{
+            'price': 'price_1I7kePBYUZLKpHL5imY347PS',
+            'quantity': 1,
+        }],
+        mode='payment',
+        success_url=request.build_absolute_uri(reverse('thanks')) + '?session_id={CHECKOUT_SESSION_ID}',
+        cancel_url=request.build_absolute_uri(reverse('index')),
+    )
+
+    return JsonResponse({
+        'session_id' : session.id,
+        'stripe_public_key' : settings.STRIPE_PUBLIC_KEY
+    })
+
 
 @csrf_exempt
 def stripe_webhook(request):

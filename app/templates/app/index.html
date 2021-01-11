@@ -24,7 +24,7 @@
             <li class="nav-item">
               <a class="nav-link active" href="{% url 'index' %}">Home <span class="sr-only">(current)</span></a>
             </li>
-          
+
             {% if user.is_authenticated %}
             <li class="nav-item">
               <a class="nav-link active" href="{% url 'logout' %}">Logout <span class="sr-only">(current)</span></a>
@@ -41,10 +41,16 @@
       </div>
 
       <div class="jumbotron">
-        <h1 class="display-3">The Product</h1>
-        <p class="lead">Purchase The Product for only Rs. 99.</p>
+        <h1 class="display-3">Service</h1>
+        <p class="lead">Types of subscription.</p>
         <a href="#" id="buy_now_btn" class="btn btn-primary">Buy Now</a>
+        <a href="#" id="buy_now_btn2" class="btn btn-primary">Rs.30/m</a>
+        <a href="#" id="buy_now_btn3" class="btn btn-primary">Rs.365/y</a>
       </div>
+
+
+
+
 
       <script src="https://js.stripe.com/v3/"></script>
 
@@ -71,6 +77,35 @@
           })
         })
       </script>
+
+
+
+
+
+      <script>
+
+        const buy_now_button2 = document.querySelector('#buy_now_btn2')
+
+        buy_now_button2.addEventListener('click', event => {
+          fetch('/checkoutm/')
+          .then((result) => { return result.json() })
+          .then((data) => {
+            var stripe = Stripe(data.stripe_public_key);
+
+            stripe.redirectToCheckout({
+            // Make the id field from the Checkout Session creation API response
+            // available to this file, so you can provide it as parameter here
+            // instead of the {{CHECKOUT_SESSION_ID}} placeholder.
+              sessionId: data.session_id
+            }).then(function (result) {
+              // If `redirectToCheckout` fails due to a browser or network
+              // error, display the localized error message to your customer
+              // using `result.error.message`.
+            });
+          })
+        })
+      </script>
+
 
       <footer class="footer">
         <p>By Sujan</p>

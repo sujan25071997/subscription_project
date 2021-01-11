@@ -50,7 +50,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'Subscription.urls'
+ROOT_URLCONF = 'subscription.urls'
 
 TEMPLATES = [
     {
@@ -68,7 +68,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'Subscription.wsgi.application'
+WSGI_APPLICATION = 'subscription.wsgi.application'
 
 
 # Database
@@ -76,12 +76,7 @@ WSGI_APPLICATION = 'Subscription.wsgi.application'
 
 
 
-#DATABASES = {
-#    'default': {
-#        'ENGINE': 'django.db.backends.sqlite3',
-#        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-#    }
-#}
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
