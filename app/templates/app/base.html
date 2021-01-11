@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+
+    <!-- Bootstrap -->
+      <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+
+    <!--Medium Style Editor -->
+      <script src="//cdn.jsdelivr.net/npm/medium-editor@latest/dist/js/medium-editor.min.js"></script>
+      <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/medium-editor@latest/dist/css/medium-editor.min.css" type="text/css" media="screen" charset="utf-8">
+
+    <!-- Custom CSS -->
+    <!-- Bootstrap core CSS -->
+    <link href="{% static 'bootstrap.min.css' %}" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="{% static 'narrow-jumbotron.css' %}" rel="stylesheet">
+
+    <!-- Font -->
+      <link href="https://fonts.googleapis.com/css2?family=Hind&display=swap" rel="stylesheet">
+
+
+  </head>
+  <body class='loader'>
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-light" style="background-color: #e3f2fd;">
+      <div class="container">
+        <ul class="navbar-nav">
+          <li><a class="navbar-brand" href="{% url 'index' %}">Index</a></li>
+
+
+        </ul>
+
+        <ul class="navbar-nav navbar-right">
+          <li>
+            <a class="nav navbar-right" href="{% url "signup" %}">
+              <span class="navbar-text"> SignUp
+                   </span></a>
+          </li>
+
+          {% if user.is_authenticated %}
+          <li>
+            <a href="{% url "index" %}">Subscription</a>
+          </li>
+          <li>
+            <a href="{% url "logout" %}">Log Out</a>
+          </li>
+          <li>
+
+          <li>
+            <a>Welcome: {{user.username}}</a>
+          </li>
+            {% else %}
+            <li>
+              <a class="nav navbar-right" href="{% url "login" %}">
+                <span class="navbar-text"> Signin
+                     </span></a>
+            </li>
+
+            {% endif %}
+        </ul>
+
+      </div>
+    </nav>
+
+    <!-- CONTENT BLOCK -->
+    <div class="content container">
+      <div class="row">
+        <div class="col-md-8">
+          {% block content %}
+          {% endblock %}
+        </div>
+      </div>
+    </div>
+
+  </body>
+</html>
