@@ -15,12 +15,29 @@ from django.views.generic.edit import CreateView
 from .form import UserRegisterForm
 from django.contrib.messages.views import SuccessMessageMixin
 
-
-
-
 from django.views.generic.base import RedirectView
 from django.contrib.auth import logout
 #from django.core.urlresolvers import reverse
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework import viewsets
+from rest_framework.authentication import TokenAuthentication
+from rest_framework import filters
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.settings import api_settings
+from rest_framework.permissions import IsAuthenticated
+from django.core.exceptions import ObjectDoesNotExist
+
+from app import models
+from app import serializers
+from app import permissions
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+
+from .serializers import (UserProfileSerializer, SubscriptionSerializer, MyStripeSerializer,
+                            CurrentSubscriptionSerializer)
 
 
 class SignUpView(SuccessMessageMixin, CreateView):
@@ -141,3 +158,69 @@ def stripe_webhook(request):
         print(line_items)
 
     return HttpResponse(status=200)
+
+
+
+
+##################################################################
+#Django Restframework
+
+class UserProfileViewSet(viewsets.ModelViewSet):
+    """Handle creating and updating user"""
+    serializer_class = serializers.UserProfileSerializer
+    queryset = models.UserProfile.objects.all()
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (permissions.UpdateOwnProfile,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name','email',)
+
+
+class StripeView(APIView):
+    """ Generic API StripeView """
+    permission_classes = (IsAuthenticated, )
+
+    def get_current_subscription(self):
+        try:
+            return self.request.user.customer.current_subscription
+        except CurrentSubscription.DoesNotExist:
+            return None
+
+    def get_customer(self):
+        try:
+            return self.request.user.customer
+        except ObjectDoesNotExist:
+            return Customer.create(self.request.user)
+
+
+class SubscriptionView(StripeView):
+    """ See, change/set the current customer/user subscription plan """
+    serializer_class = SubscriptionSerializer
+
+    def get(self, request, *args, **kwargs):
+        current_subscription = self.get_current_subscription()
+        serializer = CurrentSubscriptionSerializer(current_subscription)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request, *args, **kwargs):
+        try:
+            serializer = self.serializer_class(data=request.data)
+
+            if serializer.is_valid():
+                validated_data = serializer.validated_data
+                stripe_plan = validated_data.get('stripe_plan', None)
+                customer = self.get_customer()
+                subscription = customer.subscribe(stripe_plan)
+
+                return Response(subscription, status=status.HTTP_201_CREATED)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except stripe.StripeError as e:
+            from django.utils.encoding import smart_str
+
+            error_data = {u'error': smart_str(e) or u'Unknown error'}
+            return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
+
+    '''Adding a dummy get_extra_actions classmethod'''
+    @classmethod
+    def get_extra_actions(cls):
+        return []

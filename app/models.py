@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth.models import AbstractBaseUser
 from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
+from django.utils import timezone
+
 
 
 class UserProfileManager(BaseUserManager):
@@ -63,4 +65,63 @@ class StripeSubscription(models.Model):
 
 class MyStripeModel(models.Model):
     name = models.CharField(max_length=100)
-    stripe_subscription = models.ForeignKey(StripeSubscription, on_delete=models.CASCADE)
+    stripe_subscription = models.ForeignKey(StripeSubscription, on_delete=models.DO_NOTHING,)
+
+class CurrentSubscription(models.Model):
+    customer = models.OneToOneField(
+        UserProfile,
+        related_name="current_subscription",
+        null=True, on_delete=models.DO_NOTHING,
+    )
+    plan = models.CharField(max_length=100)
+    quantity = models.IntegerField()
+    start = models.DateTimeField()
+    # trialing, active, past_due, canceled, or unpaid
+    status = models.CharField(max_length=25)
+    cancel_at_period_end = models.BooleanField(default=False)
+    canceled_at = models.DateTimeField(blank=True, null=True)
+    current_period_end = models.DateTimeField(blank=True, null=True)
+    current_period_start = models.DateTimeField(blank=True, null=True)
+    ended_at = models.DateTimeField(blank=True, null=True)
+    trial_end = models.DateTimeField(blank=True, null=True)
+    trial_start = models.DateTimeField(blank=True, null=True)
+    amount = models.DecimalField(decimal_places=2, max_digits=9)
+    currency = models.CharField(max_length=10, default="usd")
+    created_at = models.DateTimeField(default=timezone.now)
+
+    @property
+    def total_amount(self):
+        return self.amount * self.quantity
+
+    def plan_display(self):
+        return PAYMENTS_PLANS[self.plan]["name"]
+
+    def status_display(self):
+        return self.status.replace("_", " ").title()
+
+    def is_period_current(self):
+        return self.current_period_end > timezone.now()
+
+    def is_status_current(self):
+        return self.status in ["trialing", "active"]
+
+    def is_valid(self):
+        if not self.is_status_current():
+            return False
+
+        if self.cancel_at_period_end and not self.is_period_current():
+            return False
+
+        return True
+
+    def delete(self, using=None):  # pylint: disable=E1002
+        """
+        Set values to None while deleting the object so that any lingering
+        references will not show previous values (such as when an Event
+        signal is triggered after a subscription has been deleted)
+        """
+        super(CurrentSubscription, self).delete(using=using)
+        self.plan = None
+        self.status = None
+        self.quantity = 0
+        self.amount = 0
